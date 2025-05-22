@@ -1,0 +1,25 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/Process-Multiplexer-and-CLI/FileContentIndex
+/.vs/Process-Multiplexer-and-CLI/FileContentIndex/960bc14c-e9b5-478b-a1ad-a9c15097d338.vsidx
+/.vs/Process-Multiplexer-and-CLI/FileContentIndex/e0d1f0bc-17c7-4e00-a7f9-eaacc9aa7c98.vsidx
+/.vs/Process-Multiplexer-and-CLI/v17
+/.vs/Process-Multiplexer-and-CLI/v17/.wsuo
+/.vs/Process-Multiplexer-and-CLI/v17/Browse.VC.db
+/.vs/Process-Multiplexer-and-CLI/v17/Browse.VC.db-shm
+/.vs/Process-Multiplexer-and-CLI/v17/Browse.VC.db-wal
+/.vs/Process-Multiplexer-and-CLI/v17/Browse.VC.opendb
+/.vs/Process-Multiplexer-and-CLI/v17/DocumentLayout.json
+/.vs/Process-Multiplexer-and-CLI/v17/ipch/AutoPCH
+/.vs/Process-Multiplexer-and-CLI/v17/ipch/AutoPCH/30a7d31205d28833
+/.vs/Process-Multiplexer-and-CLI/v17/ipch/AutoPCH/30a7d31205d28833/EMULATOR.ipch
+/.vs/Process-Multiplexer-and-CLI/v17/ipch/AutoPCH/7e678519431bd2b4
+/.vs/Process-Multiplexer-and-CLI/v17/ipch/AutoPCH/7e678519431bd2b4/VCTMP21324_581679.EMULATOR.C49803C7.ipch
+/.vs/ProjectSettings.json
+/.vs/slnx.sqlite
+/.vs/VSWorkspaceState.json
+/emulator.exe
+/.vs
+/.vs/slnx.sqlite-journal
