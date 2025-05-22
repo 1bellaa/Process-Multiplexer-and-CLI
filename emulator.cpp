@@ -75,8 +75,8 @@ void Initialize() {
     cout << "initialize command recognized. Doing something." << endl;
 }
 
-void SchedulerStart() {
-    cout << "scheduler-start command recognized. Doing something." << endl;
+void SchedulerTest() {
+    cout << "scheduler-test command recognized. Doing something." << endl;
 }
 
 void SchedulerStop() {
@@ -134,8 +134,8 @@ int main() {
             Initialize();
         } else if (command == "screen") {
             Screen();
-        } else if (command == "scheduler-start") {
-            SchedulerStart();
+        } else if (command == "scheduler-test") {
+            SchedulerTest();
         } else if (command == "scheduler-stop") {
             SchedulerStop();
         } else if (command == "report-util") {
