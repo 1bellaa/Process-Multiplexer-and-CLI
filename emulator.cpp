@@ -9,7 +9,7 @@ void Welcome() {
     cout << "| |__.  __| | | |.| | | |     | |...  __| |  |  |" << endl;
     cout << "|____| |____| |_____| |_|     |____| |____|  |__|" << endl;
     cout << "Welcome to CSOPESY Emulator!" << endl  
-         << "This is for CSOPESY Seatwork #1" << endl;
+         << "This is for CSOPESY Groupwork #1" << endl;
 }
 
 void Clear() {
@@ -26,6 +26,7 @@ void ProcessSmi() {
 }
 
 void AddProcess() {
+    Clear(); // clear everything since you are inside a process
     cout << "screen -s command recognized. Doing something." << endl;
     
     bool add_run = true;
@@ -49,6 +50,7 @@ void AddProcess() {
 }
 
 void UpdateProcess() {
+    Clear(); // clear everything since you are accessing/retrieving a process
     cout << "screen -r command recognized. Doing something." << endl;
     
     bool update_run = true;
@@ -75,8 +77,8 @@ void Initialize() {
     cout << "initialize command recognized. Doing something." << endl;
 }
 
-void SchedulerTest() {
-    cout << "scheduler-test command recognized. Doing something." << endl;
+void SchedulerStart() {
+    cout << "scheduler-start command recognized. Doing something." << endl;
 }
 
 void SchedulerStop() {
@@ -85,37 +87,6 @@ void SchedulerStop() {
 
 void ReportUtil() {
     cout << "report-util command recognized. Doing something." << endl;
-}
-
-void Screen() {
-    /* Screen commands */
-    cout << "screen command recognized." << endl;
-    
-    bool screen_run = true;
-    while(screen_run) {
-        string command;
-        cout << "Enter command: ";
-        getline(cin, command);
-
-        if (command == "screen -ls") {
-            ListProcesses();
-        } else if (command == "screen -s") {
-            AddProcess();
-        } else if (command == "screen -r") {
-            UpdateProcess();
-        } else if (command == "process-smi") {
-            ProcessSmi();
-        } else if (command == "clear") {
-            Clear();
-        } else if (command == "exit") {
-            screen_run = false;
-            Clear();
-            Welcome();
-            return;
-        } else {
-            cout << "Unknown command. Please try again." << endl;
-        }
-    }
 }
 
 int main() {
@@ -127,15 +98,18 @@ int main() {
     while(running) {
         string command;
         cout << "Enter command: ";
-        cin >> command;
-        cin.ignore(); // Clear the input buffer to avoid issues with getline (forgot the problem i encountered kaya ganito s'ya naka-implement)
+        getline(cin, command);
 
         if (command == "initialize") {
             Initialize();
-        } else if (command == "screen") {
-            Screen();
-        } else if (command == "scheduler-test") {
-            SchedulerTest();
+        } else if (command == "screen -ls") {
+            ListProcesses();
+        } else if (command == "screen -s") {
+            AddProcess();
+        } else if (command == "screen -r") {
+            UpdateProcess();
+        } else if (command == "scheduler-start") {
+            SchedulerStart();
         } else if (command == "scheduler-stop") {
             SchedulerStop();
         } else if (command == "report-util") {
