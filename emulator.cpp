@@ -1,13 +1,20 @@
 #include <iostream>
 using namespace std;
 
-void Clear() {
-    system("cls");
-}
-
 void Welcome() {
+    cout << " ____   ____   ____    ____    ____   ____  __  __" << endl;
+    cout << "| ...| / ...| | ... | | ... | | ...| / ...||  ||  |" << endl;
+    cout << "| |    | |__  | | | | | |.| | | |..  | |__ |  \\/  |" << endl;
+    cout << "| |    \\._  | | | | | |  __/  | ...|  \\._ | \\.  ./" << endl;
+    cout << "| |__.  __| | | |.| | | |     | |...  __| |  |  |" << endl;
+    cout << "|____| |____| |_____| |_|     |____| |____|  |__|" << endl;
     cout << "Welcome to CSOPESY Emulator!" << endl  
          << "This is for CSOPESY Seatwork #1" << endl;
+}
+
+void Clear() {
+    system("cls");
+    Welcome();
 }
 
 void ListProcesses() {
