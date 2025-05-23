@@ -1,6 +1,5 @@
 #include <string>
 #include <windows.h>
-#include <conio.h>
 #include <iostream>
 using namespace std;
 
@@ -12,15 +11,15 @@ void Welcome() {
     cout << "| |__. __| || |.| || |    | |... __| |  |  |" << endl;
     cout << "|____||____||_____||_|    |____||____|  |__|" << endl;
 
-    HANDLE hc = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hc, 2);
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(handle, 2); //Green text
 
     cout << "Welcome to CSOPESY Emulator!" << endl;
     cout << "This is for CSOPESY Groupwork #1" << endl;
 
-    SetConsoleTextAttribute(hc, 14);
+    SetConsoleTextAttribute(handle, 14); //Yellow text
     cout << "Type 'exit' to quit, 'clear' to clear the screen" << endl;
-    SetConsoleTextAttribute(hc, 15);
+    SetConsoleTextAttribute(handle, 15); //White text
 }
 
 void Clear() {
