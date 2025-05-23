@@ -1,15 +1,26 @@
+#include <string>
+#include <windows.h>
+#include <conio.h>
 #include <iostream>
 using namespace std;
 
 void Welcome() {
-    cout << " ____   ____   ____    ____    ____   ____  __  __" << endl;
-    cout << "| ...| / ...| | ... | | ... | | ...| / ...||  ||  |" << endl;
-    cout << "| |    | |__  | | | | | |.| | | |..  | |__ |  \\/  |" << endl;
-    cout << "| |    \\._  | | | | | |  __/  | ...|  \\._ | \\.  ./" << endl;
-    cout << "| |__.  __| | | |.| | | |     | |...  __| |  |  |" << endl;
-    cout << "|____| |____| |_____| |_|     |____| |____|  |__|" << endl;
-    cout << "Welcome to CSOPESY Emulator!" << endl  
-         << "This is for CSOPESY Groupwork #1" << endl;
+    cout << " ____  ____  _____  _____  ____  ____  __  __" << endl;
+    cout << "| ...|/ ...|| ... || ... || ...|/ ...||  ||  |" << endl;
+    cout << "| |   | |__ | | | || |.| || |.. | |__ |  \\/  |" << endl;
+    cout << "| |   \\._  || | | ||  __/ | ...| \\._ | \\.  ./" << endl;
+    cout << "| |__. __| || |.| || |    | |... __| |  |  |" << endl;
+    cout << "|____||____||_____||_|    |____||____|  |__|" << endl;
+
+    HANDLE hc = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hc, 2);
+
+    cout << "Welcome to CSOPESY Emulator!" << endl;
+    cout << "This is for CSOPESY Groupwork #1" << endl;
+
+    SetConsoleTextAttribute(hc, 14);
+    cout << "Type 'exit' to quit, 'clear' to clear the screen" << endl;
+    SetConsoleTextAttribute(hc, 15);
 }
 
 void Clear() {
@@ -89,6 +100,10 @@ void ReportUtil() {
     cout << "report-util command recognized. Doing something." << endl;
 }
 
+void Screen() {
+    cout << "screen command recognized. Doing something." << endl;
+}
+
 int main() {
     /* Welcome message for CSOPESY Emulator main menu console */ 
     Welcome();
@@ -102,12 +117,15 @@ int main() {
 
         if (command == "initialize") {
             Initialize();
+        } else if (command =="screen") {
+            Screen();
+        /* For next groupwork
         } else if (command == "screen -ls") {
             ListProcesses();
         } else if (command == "screen -s") {
             AddProcess();
         } else if (command == "screen -r") {
-            UpdateProcess();
+            UpdateProcess();*/
         } else if (command == "scheduler-start") {
             SchedulerStart();
         } else if (command == "scheduler-stop") {
