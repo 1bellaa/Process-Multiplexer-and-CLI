@@ -17,7 +17,7 @@ void Welcome() {
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(handle, 2); // Green
     cout << "Welcome to CSOPESY Emulator!" << endl;
-    cout << "This is for CSOPESY Groupwork #1" << endl;
+    cout << "This is for CSOPESY Groupwork #2" << endl;
 
     SetConsoleTextAttribute(handle, 14); // Yellow
     cout << "Type 'exit' to quit, 'clear' to clear the screen" << endl;
