@@ -15,7 +15,7 @@ void Welcome() {
     SetConsoleTextAttribute(handle, 2); //Green text
 
     cout << "Welcome to CSOPESY Emulator!" << endl;
-    cout << "This is for CSOPESY Groupwork #1" << endl;
+    cout << "This is for CSOPESY Groupwork #2" << endl;
 
     SetConsoleTextAttribute(handle, 14); //Yellow text
     cout << "Type 'exit' to quit, 'clear' to clear the screen" << endl;
