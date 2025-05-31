@@ -27,9 +27,11 @@ void Welcome() {
 
 string GetCurrentTimestamp() {
     time_t now = time(0);
-    tm* ltm = localtime(&now);
+    tm ltm; // use a local object instead of pointer
+    localtime_s(&ltm, &now); // safer version of localtime
+
     char buffer[50];
-    strftime(buffer, sizeof(buffer), "%m/%d/%Y, %I:%M:%S %p", ltm);
+    strftime(buffer, sizeof(buffer), "%m/%d/%Y, %I:%M:%S %p", &ltm);
     return string(buffer);
 }
 
@@ -57,42 +59,6 @@ private:
         cout << "[CPU Usage: 34%] [Memory Usage: 128MB] [Disk I/O: 2.4MB/s]" << endl;
     }
 
-public:
-    void ListScreens() {
-        cout << "Existing Screens:" << endl;
-        if (screens.empty()) {
-            cout << "  [none yet]" << endl;
-        }
-        else {
-            for (auto& [name, ts] : screens) {
-                cout << "  " << name << " (Created: " << ts << ")" << endl;
-            }
-        }
-    }
-
-    bool ScreenExists(const string& name) {
-        return screens.find(name) != screens.end();
-    }
-
-    void AddScreen(const string& name) {
-        if (ScreenExists(name)) {
-            cout << "Screen '" << name << "' already exists." << endl;
-        }
-        else {
-            screens[name] = GetCurrentTimestamp();
-            ScreenSession(name);
-        }
-    }
-
-    void ResumeScreen(const string& name) {
-        if (!ScreenExists(name)) {
-            cout << "Screen '" << name << "' does not exist. Use screen -s to create it." << endl;
-        }
-        else {
-            ScreenSession(name);
-        }
-    }
-
     void ScreenSession(const string& name) {
         DrawScreen(name);
         string input;
@@ -114,6 +80,42 @@ public:
             else {
                 cout << "Unknown command. Try again." << endl;
             }
+        }
+    }
+
+    bool ScreenExists(const string& name) {
+        return screens.find(name) != screens.end();
+    }
+
+public:
+    void ListScreens() {
+        cout << "Existing Screens:" << endl;
+        if (screens.empty()) {
+            cout << "  [none yet]" << endl;
+        }
+        else {
+            for (auto& [name, ts] : screens) {
+                cout << "  " << name << " (Created: " << ts << ")" << endl;
+            }
+        }
+    }
+
+    void AddScreen(const string& name) {
+        if (ScreenExists(name)) {
+            cout << "Screen '" << name << "' already exists." << endl;
+        }
+        else {
+            screens[name] = GetCurrentTimestamp();
+            ScreenSession(name);
+        }
+    }
+
+    void ResumeScreen(const string& name) {
+        if (!ScreenExists(name)) {
+            cout << "Screen '" << name << "' does not exist. Use screen -s to create it." << endl;
+        }
+        else {
+            ScreenSession(name);
         }
     }
 };
