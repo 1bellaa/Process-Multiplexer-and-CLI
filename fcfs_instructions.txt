@@ -1,0 +1,10 @@
+Instructions:
+
+1. Type: scheduler-start
+   - Starts the scheduler and CPU cores.
+
+2. Type: screen -ls
+   - Shows running and finished processes.
+
+3. Type: exit
+   - Stops everything and exits the emulator.
