@@ -130,25 +130,26 @@ public:
                 int totalPrints = progressMap.count(name) ? progressMap[name].second : 100;
                 int coreID = processCoreMap.count(name) ? processCoreMap[name] : -1;
 
-                SetConsoleTextAttribute(handle, 15);
+                SetConsoleTextAttribute(handle, 15); // White
                 cout << name << "  (" << ts << ")  ";
-                SetConsoleTextAttribute(handle, 11);
-                cout << "Core: " << coreID << "   ";
-                SetConsoleTextAttribute(handle, 6);
+                SetConsoleTextAttribute(handle, 11); // Cyan
+                cout << "Core: " << coreID << "    ";
+                SetConsoleTextAttribute(handle, 6); // Dark Yellow
                 cout << printsDone << " / " << totalPrints << endl;
             }
         }
 
+        SetConsoleTextAttribute(handle, 10); // Green
         cout << "\nFinished processes:" << endl;
 
         for (const string& name : finishedScreens) {
             string ts = screens[name];
 
-            SetConsoleTextAttribute(handle, 15);
+			SetConsoleTextAttribute(handle, 15); // White
             cout << name << "  (" << ts << ")  ";
-            SetConsoleTextAttribute(handle, 10);
+            SetConsoleTextAttribute(handle, 10); // Green
             cout << "Finished   ";
-            SetConsoleTextAttribute(handle, 6);
+			SetConsoleTextAttribute(handle, 6); // Dark Yellow
             cout << "100 / 100" << endl;
         }
 
