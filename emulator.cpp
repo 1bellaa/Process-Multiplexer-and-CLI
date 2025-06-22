@@ -9,8 +9,11 @@
 #include <ctime>
 #include <windows.h>
 #include "console.h"
+#include "marquee.cpp"
 
 using namespace std;
+
+extern void StartMarqueeConsole();
 
 string GetCurrentTimestamp() {
     time_t now = time(0);
@@ -53,6 +56,7 @@ int main() {
         if (command == "initialize") console.Initialize();
         else if (!console.IsInitialized() && command != "exit") {
             cout << "Please initialize the system first using 'initialize' command." << endl;
+            // add a part where the config file will be loaded?? or smth here emememe
         }
         else if (command == "screen -ls") console.ListScreens();
         else if (command.rfind("screen -s ", 0) == 0) console.CreateScreen(command.substr(10));
@@ -60,6 +64,10 @@ int main() {
         else if (command == "scheduler-start") console.SchedulerStart();
         else if (command == "scheduler-stop") console.SchedulerStop();
         else if (command == "report-util") console.ReportUtil();
+        else if (command == "marquee") {
+            StartMarqueeConsole();
+            Welcome(); // Show welcome screen again after exiting marquee
+        }
         else if (command == "clear") Clear();
         else if (command == "exit") running = false;
         else cout << "Unknown command. Please try again." << endl;
