@@ -9,8 +9,12 @@
 #include <ctime>
 #include <windows.h>
 #include "console.h"
-#include "marquee.cpp"
+#include "marquee.h"
 
+
+#pragma once
+
+void StartMarqueeConsole();
 using namespace std;
 
 extern void StartMarqueeConsole();

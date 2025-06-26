@@ -1,7 +1,7 @@
+#include "marquee.h"
 #include <string>
 #include <windows.h>
 #include <iostream>
-#include <vector>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -52,17 +52,17 @@ void ShowCursor() {
 
 void MarqueeConsole() {
     system("cls");
-    
+
     // Header
     SetCursorPosition(0, 0);
     cout << "****************************************" << endl;
     cout << "* Displaying a marquee console! *" << endl;
     cout << "****************************************" << endl;
-    
+
     // Marquee position
     marquee_x += dx;
     marquee_y += dy;
-    
+
     // Bounce like dvd 
     if (marquee_x <= 0 || marquee_x + MARQUEE_TEXT.length() >= CONSOLE_WIDTH - 1) {
         dx = -dx;
@@ -72,24 +72,24 @@ void MarqueeConsole() {
         dy = -dy;
         marquee_y = max(4, min(marquee_y, 14));
     }
-    
+
     // Draw marquee text at current position
     SetCursorPosition(marquee_x, marquee_y);
     cout << MARQUEE_TEXT;
-    
+
     // Draw input prompt
     SetCursorPosition(0, 17);
     cout << "Enter a command for marquee console: ";
-    
+
     {
         lock_guard<mutex> lock(INPUT_MUTEX);
         cout << CURRENT_INPUT;
     }
-    
+
     // Draw command history
     {
         lock_guard<mutex> lock(COMMANDS_MUTEX);
-        
+
         // Display recent commands (show last 3) 
         int start_index = max(0, (int)RECENT_COMMANDS.size() - 3);
         for (int i = start_index; i < RECENT_COMMANDS.size(); i++) {
@@ -97,14 +97,14 @@ void MarqueeConsole() {
             cout << "Command processed in marquee console: " << RECENT_COMMANDS[i];
         }
     }
-    
+
     cout.flush(); // Display output immediately
 }
 
 void MarqueeWorkerThread() {
     while (RUNNING_MARQUEE && !EXIT_MARQUEE) {
         if (!EXIT_MARQUEE) {
-            MarqueeConsole(); 
+            MarqueeConsole();
         }
         this_thread::sleep_for(chrono::milliseconds(screen_refresh_delay)); // Speed for flickering effect
     }
@@ -116,10 +116,12 @@ void ProcessMarqueeCommand(const string& command) {
             lock_guard<mutex> lock(COMMANDS_MUTEX);
             RECENT_COMMANDS.clear();
         }
-    } else if (command == "exit") {
+    }
+    else if (command == "exit") {
         EXIT_MARQUEE = true;
         RUNNING_MARQUEE = false;
-    } else if (!command.empty()) {
+    }
+    else if (!command.empty()) {
         {
             lock_guard<mutex> lock(COMMANDS_MUTEX);
             RECENT_COMMANDS.push_back(command);
@@ -135,26 +137,28 @@ void MarqueeInputThread() {
     while (RUNNING_MARQUEE && !EXIT_MARQUEE) {
         if (_kbhit()) {
             char ch = _getch();
-            
-            if (ch == 13) { 
+
+            if (ch == 13) {
                 string command_to_process;
                 {
                     lock_guard<mutex> lock(INPUT_MUTEX);
                     command_to_process = CURRENT_INPUT;
                     CURRENT_INPUT = "";
                 }
-                
+
                 if (!command_to_process.empty()) {
                     ProcessMarqueeCommand(command_to_process);
                 }
-            } else if (ch == 8) { 
+            }
+            else if (ch == 8) {
                 {
                     lock_guard<mutex> lock(INPUT_MUTEX);
                     if (!CURRENT_INPUT.empty()) {
                         CURRENT_INPUT.pop_back();
                     }
                 }
-            } else if (ch >= 32 && ch <= 126) { // Printable characters
+            }
+            else if (ch >= 32 && ch <= 126) { // Printable characters
                 {
                     lock_guard<mutex> lock(INPUT_MUTEX);
                     CURRENT_INPUT += ch;
@@ -168,31 +172,31 @@ void MarqueeInputThread() {
 void StartMarqueeConsole() {
     system("cls");
     HideCursor();
-    
+
     RUNNING_MARQUEE = true;
     EXIT_MARQUEE = false;
     marquee_x = 1;
     marquee_y = 5;
     dx = 1;
     dy = 1;
-    
+
     {
         lock_guard<mutex> lock(COMMANDS_MUTEX);
         RECENT_COMMANDS.clear();
     }
-    
+
     {
         lock_guard<mutex> lock(INPUT_MUTEX);
         CURRENT_INPUT = "";
     }
-    
+
     thread animation_thread(MarqueeWorkerThread);
     thread input_thread(MarqueeInputThread);
-    
+
     while (RUNNING_MARQUEE && !EXIT_MARQUEE) {
         this_thread::sleep_for(chrono::milliseconds(100));
     }
-    
+
     RUNNING_MARQUEE = false;
     if (animation_thread.joinable()) {
         animation_thread.join();
@@ -200,7 +204,7 @@ void StartMarqueeConsole() {
     if (input_thread.joinable()) {
         input_thread.join();
     }
-    
+
     ShowCursor();
     system("cls");
 }

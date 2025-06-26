@@ -11,6 +11,10 @@
 #include <map>
 #include <vector>
 #include <cstdint>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <chrono>
 
 using namespace std;
 
@@ -38,42 +42,42 @@ public:
     string createdAt;
     int coreId = -1;
     int quantumLeft = 0;
-    
+
     Process(string n, int id) : name(n), pid(id) {
         createdAt = getCurrentTimestamp();
     }
-    
+
     void addInstruction(const Instruction& inst) {
         instructions.push_back(inst);
     }
-    
+
     bool executeNextInstruction(int delays) {
         if (sleepCounter > 0) {
             sleepCounter--;
-            return false; 
+            return false;
         }
-        
+
         if (currentInstruction >= instructions.size()) {
             isFinished = true;
             return true;
         }
-        
+
         Instruction& inst = instructions[currentInstruction];
-        
+
         switch (inst.type) {
             // add other commands here later
-            case PRINT: {
-                string msg = "Hello world from " + name + "!";
-                outputLog.push_back(msg);
-                break;
-            }
+        case PRINT: {
+            string msg = "Hello world from " + name + "!";
+            outputLog.push_back(msg);
+            break;
         }
-        
+        }
+
         currentInstruction++;
         return false;
     }
-    
-private:    
+
+private:
     string getCurrentTimestamp() {
         time_t now = time(0);
         tm ltm;
@@ -97,12 +101,17 @@ public:
         int delaysPerExec = 0;
     } config;
 
-    void schedule() {}
-    void loadConfig() {
+    CPUScheduler() : isRunning(false), cpuCycles(0) {}
+
+    ~CPUScheduler() {
+        stopScheduler();
+    }
+
+    bool loadConfig() {
         ifstream file("config.txt");
         if (!file.is_open()) {
-            cout << "Config file not found. Using default values." << endl;
-            return;
+            cout << "[CONFIG] Config file not found. Using default values." << endl;
+            return true; // Still consider it a success with defaults
         }
         string line;
         while (getline(file, line)) {
@@ -119,8 +128,143 @@ public:
             }
         }
         file.close();
+        cout << "[CONFIG] Configuration loaded successfully." << endl;
+        return true;
     }
-    void startScheduler() { cout << "Scheduler started.\n"; }
-    void stopScheduler() { cout << "Scheduler stopped.\n"; }
-    bool findProcess(const string&) { return false; } // Dummy for now
+
+    void startScheduler() {
+        if (isRunning) {
+            cout << "[SCHEDULER] Scheduler is already running." << endl;
+            return;
+        }
+
+        isRunning = true;
+        cpuCycles = 0;
+
+        // Start the scheduler thread
+        schedulerThread = thread([this]() {
+            cout << "[SCHEDULER] Scheduler started. Using "
+                << (config.scheduler == "rr" ? "Round Robin" : config.scheduler)
+                << " algorithm with " << config.numCpu << " CPUs." << endl;
+
+            while (isRunning) {
+                // Perform scheduling
+                schedule();
+
+                // Increment CPU cycle counter
+                cpuCycles++;
+
+                // Output status every 1000 cycles (can be adjusted)
+                if (cpuCycles % 1000 == 0) {
+                    lock_guard<mutex> lock(schedulerMutex);
+                    cout << "[SCHEDULER] CPU Cycles: " << cpuCycles
+                        << ", Active Processes: " << processes.size() << endl;
+                }
+
+                // Sleep to prevent maxing out CPU
+                this_thread::sleep_for(chrono::milliseconds(10));
+            }
+
+            cout << "[SCHEDULER] Scheduler stopped after " << cpuCycles << " cycles." << endl;
+            });
+    }
+
+    void stopScheduler() {
+        if (!isRunning) {
+            cout << "[SCHEDULER] Scheduler is not running." << endl;
+            return;
+        }
+
+        isRunning = false;
+
+        if (schedulerThread.joinable()) {
+            schedulerThread.join();
+        }
+
+        cout << "[SCHEDULER] Scheduler stopped." << endl;
+    }
+
+    bool findProcess(const string& name) {
+        lock_guard<mutex> lock(schedulerMutex);
+        for (const auto& proc : processes) {
+            if (proc.name == name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Add a process to the scheduler
+    void addProcess(const string& name) {
+        lock_guard<mutex> lock(schedulerMutex);
+        int pid = nextPid++;
+        processes.push_back(Process(name, pid));
+        cout << "[SCHEDULER] Process '" << name << "' added with PID " << pid << endl;
+    }
+
+    // Get current CPU cycle count
+    uint64_t getCpuCycles() const {
+        return cpuCycles;
+    }
+
+private:
+    vector<Process> processes;
+    atomic<bool> isRunning;
+    atomic<uint64_t> cpuCycles;
+    thread schedulerThread;
+    mutex schedulerMutex;
+    int nextPid = 1000;
+
+    void schedule() {
+        // The actual scheduling algorithm implementation
+        lock_guard<mutex> lock(schedulerMutex);
+
+        if (processes.empty()) {
+            return;  // Nothing to schedule
+        }
+
+        // Simple implementation of Round Robin for now
+        if (config.scheduler == "rr") {
+            // Round Robin implementation
+            for (auto& proc : processes) {
+                if (!proc.isFinished) {
+                    // Assign processor if not assigned
+                    if (proc.coreId == -1) {
+                        // Find available core (simplified)
+                        for (int i = 0; i < config.numCpu; i++) {
+                            // Check if core i is available (simplified)
+                            bool coreAvailable = true;
+                            for (const auto& p : processes) {
+                                if (p.coreId == i) {
+                                    coreAvailable = false;
+                                    break;
+                                }
+                            }
+
+                            if (coreAvailable) {
+                                proc.coreId = i;
+                                proc.quantumLeft = config.quantumCycles;
+                                break;
+                            }
+                        }
+                    }
+
+                    // If process has a core assigned
+                    if (proc.coreId != -1) {
+                        // Execute one instruction
+                        bool finished = proc.executeNextInstruction(config.delaysPerExec);
+
+                        // Decrement quantum
+                        proc.quantumLeft--;
+
+                        // If quantum expired or process finished, release core
+                        if (proc.quantumLeft <= 0 || finished) {
+                            proc.coreId = -1;
+                        }
+                    }
+                }
+            }
+        }
+        // Additional scheduling algorithms can be added here
+    }
 };
