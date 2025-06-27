@@ -61,6 +61,7 @@ int main() {
         else if (!console.IsInitialized() && command != "exit") {
             cout << "Please initialize the system first using 'initialize' command." << endl;
             // add a part where the config file will be loaded?? or smth here emememe
+			// ^reply to above: config file is read in Console class's initialize, with the Scheduler class's loadConfig method
         }
         else if (command == "screen -ls") console.ListScreens();
         else if (command.rfind("screen -s ", 0) == 0) console.CreateScreen(command.substr(10));

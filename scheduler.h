@@ -108,7 +108,7 @@ public:
     }
 
     bool loadConfig() {
-        ifstream file("config.txt");
+        ifstream file("../config.txt");
         if (!file.is_open()) {
             cout << "[CONFIG] Config file not found. Using default values." << endl;
             return true; // Still consider it a success with defaults
