@@ -15,17 +15,162 @@
 #include <mutex>
 #include <atomic>
 #include <chrono>
+#include <unordered_map>
 
 using namespace std;
 
+class Process; // Forward declaration
+
 /* ========== PROCESS INSTRUCTION TYPES ========== */
 enum InstructionType {
-    PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR_LOOP, END_FOR
+    PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR_LOOP
 };
 
 /* ========== INSTRUCTION STRUCT ========== */
-struct Instruction {
+class Instruction {
     InstructionType type;
+public:
+	Instruction(InstructionType t){
+		this->type = t;
+    }
+
+    InstructionType getType() const {
+        return type;
+	}
+
+    void execute(Process& process) {
+         switch (type) {  
+             case PRINT: {  
+                 process.outputLog.push_back("Hello world from " + process.name + "!");  
+                 break;  
+             }  
+             case DECLARE: {  
+                 string name;  
+                 int length = 5;  
+                 static const char charset[] = "abcdefghijklmnopqrstuvwxyz";  
+                 for (size_t i = 0; i < length; ++i) {  
+                     name += charset[rand() % (sizeof(charset) - 1)];  
+                 }  
+                 uint16_t value = static_cast<uint16_t>(rand() % 65536);  
+                 process.symbolTable[name] = value;  
+                 break;  
+             }  
+             case ADD: {  
+                 // For value1, value2, value3: randomly use existing variable or create new one
+                 auto& table = process.symbolTable;
+                 string varNames[3];
+                 uint16_t values[3];
+
+                 for (int i = 0; i < 3; ++i) {
+                     bool useExisting = (!table.empty() && (rand() % 2 == 0));
+                     if (useExisting) {
+                         // Pick a random existing variable
+                         size_t idx = rand() % table.size();
+                         auto it = table.begin();
+                         std::advance(it, idx);
+                         varNames[i] = it->first;
+                         values[i] = it->second;
+                     } else {
+                         // Create a new variable
+                         int length = 5;
+                         static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
+                         for (int j = 0; j < length; ++j) {
+                             varNames[i] += charset[rand() % (sizeof(charset) - 1)];
+                         }
+                         values[i] = static_cast<uint16_t>(rand() % 65536);
+                         table[varNames[i]] = values[i];
+                     }
+                 }
+
+                 // Perform the addition: value1 = value2 + value3
+                 values[0] = values[1] + values[2];
+                 table[varNames[0]] = values[0];
+                 break;
+             }  
+             case SUBTRACT: {
+                 // For value1, value2, value3: randomly use existing variable or create new one
+                 auto& table = process.symbolTable;
+                 string varNames[3];
+                 uint16_t values[3];
+
+                 for (int i = 0; i < 3; ++i) {
+                     bool useExisting = (!table.empty() && (rand() % 2 == 0));
+                     if (useExisting) {
+                         // Pick a random existing variable
+                         size_t idx = rand() % table.size();
+                         auto it = table.begin();
+                         std::advance(it, idx);
+                         varNames[i] = it->first;
+                         values[i] = it->second;
+                     }
+                     else {
+                         // Create a new variable
+                         int length = 5;
+                         static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
+                         for (int j = 0; j < length; ++j) {
+                             varNames[i] += charset[rand() % (sizeof(charset) - 1)];
+                         }
+                         values[i] = static_cast<uint16_t>(rand() % 65536);
+                         table[varNames[i]] = values[i];
+                     }
+                 }
+
+                 // Perform the addition: value1 = value2 + value3
+                 values[0] = values[1] - values[2];
+                 table[varNames[0]] = values[0];
+                 break;
+             }
+             case SLEEP: {
+			     // Sleep for a random duration between 1 and 255 seconds
+			     int sleepDuration = rand() % 255 + 1; // Random duration between 1 and 255 seconds
+                 while (sleepDuration > 0) {
+                     sleepDuration--;
+				     process.quantumLeft--; // Decrement quantum left
+				     // for round robin, if sleeping exceeds quantum, yield the CPU
+                     if (process.quantumLeft <= 0) {
+                         process.sleepCounter = sleepDuration; // Set sleep counter
+                         return; // Yield CPU
+                     }
+                 }
+                 break;
+             }  
+             case FOR_LOOP: {
+                 InstructionType newInstType;
+
+                 // Generate random array of instructions
+			     int numInstructions = rand() % 10 + 1; // Random number of instructions between 1 and 10
+                 vector<Instruction> loopInstructions;
+
+
+				 process.forLoopDepth++; // Increment loop depth for nested loops
+                 for (int i = 0; i < numInstructions; ++i) {
+                     if (process.forLoopDepth == 3) { // Prevent more than 3 nested loops
+						 newInstType = static_cast<InstructionType>(rand() % 5); // Randomly choose from PRINT, DECLARE, ADD, SUBTRACT, SLEEP
+                     }
+                     else { // if nested loops not reaching 3, then carry on with potentially adding for loops
+                         newInstType = static_cast<InstructionType>(rand() % 6); // Randomly choose from PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR_LOOP
+                     }
+                     loopInstructions.push_back(Instruction(newInstType));
+                 }
+			     // random number of repeat iterations for the loop
+			     int repeatCount = rand() % 10 + 1; // Random number of iterations between 1 and 10
+
+			     // Execute the loop instructions
+                 for (int i = 0; i < repeatCount; ++i) {
+                     for (auto& inst : loopInstructions) {
+                         inst.execute(process);
+                     }
+				 }
+				 process.forLoopDepth--; // Decrement loop depth after execution
+			     break;
+             }
+             default: {  
+                 cout << "[ERROR] Unknown instruction type." << endl;  
+                 break;  
+             }  
+         }  
+     }
+
 };
 
 /* ========== PROCESS CLASS ========== */
@@ -34,7 +179,7 @@ public:
     string name;
     int pid;
     vector<Instruction> instructions;
-    map<string, uint16_t> variables;
+    unordered_map<string, uint16_t> symbolTable;
     vector<string> outputLog;
     int currentInstruction = 0;
     int sleepCounter = 0;
@@ -42,6 +187,7 @@ public:
     string createdAt;
     int coreId = -1;
     int quantumLeft = 0;
+	int forLoopDepth = 0; // For tracking nested loops
 
     Process(string n, int id) : name(n), pid(id) {
         createdAt = getCurrentTimestamp();
@@ -63,43 +209,12 @@ public:
         }
 
         Instruction& inst = instructions[currentInstruction];
+        inst.execute(*this);
 
-        switch (inst.type) {
-            // add other commands here later
-            case PRINT: {
-                string msg = "Hello world from " + name + "!";
-                outputLog.push_back(msg);
-                break;
-            }
-            case DECLARE: {
-                // Example: Declare a variable with a default value
-                break;
-			}
-            case ADD: {
-                // Add two variables
-                break;
-            }
-            case SUBTRACT: {
-                // Subtract two variables
-                break;
-			}
-            case SLEEP: {
-                // Simulate a sleep operation
-                break;
-            }
-            case FOR_LOOP: {
-                // Handle for loop logic (not implemented in this example)
-                break;
-            }
-            case END_FOR: {
-                // Handle end of for loop (not implemented in this example)
-                break;
-            }
-            default:
-                cout << "[ERROR] Unknown instruction type." << endl;
-				return true; // Mark as finished on error
+        int i = 0;
+        while (i < delays) {
+            i++;
         }
-
         currentInstruction++;
         return false;
     }
@@ -291,7 +406,13 @@ private:
                     }
                 }
             }
-        }
+        } else if (config.scheduler == "fcfs") {
+            for (auto& proc : processes) {
+				// First-Come, First-Served implementation
+            }
+        } else {
+            cout << "[SCHEDULER] Unknown scheduling algorithm: " << config.scheduler << endl;
+		}
         // Additional scheduling algorithms can be added here
     }
 };

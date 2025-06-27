@@ -50,6 +50,7 @@ void Clear() {
 }
 
 int main() {
+    srand(static_cast<unsigned int>(time(nullptr)));
     Welcome();
     Console console;
     bool running = true;
