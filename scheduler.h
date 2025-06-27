@@ -66,11 +66,38 @@ public:
 
         switch (inst.type) {
             // add other commands here later
-        case PRINT: {
-            string msg = "Hello world from " + name + "!";
-            outputLog.push_back(msg);
-            break;
-        }
+            case PRINT: {
+                string msg = "Hello world from " + name + "!";
+                outputLog.push_back(msg);
+                break;
+            }
+            case DECLARE: {
+                // Example: Declare a variable with a default value
+                break;
+			}
+            case ADD: {
+                // Add two variables
+                break;
+            }
+            case SUBTRACT: {
+                // Subtract two variables
+                break;
+			}
+            case SLEEP: {
+                // Simulate a sleep operation
+                break;
+            }
+            case FOR_LOOP: {
+                // Handle for loop logic (not implemented in this example)
+                break;
+            }
+            case END_FOR: {
+                // Handle end of for loop (not implemented in this example)
+                break;
+            }
+            default:
+                cout << "[ERROR] Unknown instruction type." << endl;
+				return true; // Mark as finished on error
         }
 
         currentInstruction++;
