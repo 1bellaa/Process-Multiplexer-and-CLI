@@ -67,6 +67,7 @@ thread schedulerThread;
 
 // Tracking process execution status
 vector<string> finishedScreens;
+map<string, string> runningScreens;
 map<string, pair<int, int>> progressMap;
 map<string, int> processCoreMap;
 
@@ -121,10 +122,12 @@ public:
     void ListScreens() {
         HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
+		lock_guard<mutex> lock(queueMutex);
+
         cout << "----------------------------------------------" << endl;
         cout << "Running processes:" << endl;
 
-        for (const auto& [name, ts] : screens) {
+        for (const auto& [name, ts] : runningScreens) {
             if (find(finishedScreens.begin(), finishedScreens.end(), name) == finishedScreens.end()) {
                 int printsDone = progressMap.count(name) ? progressMap[name].first : 0;
                 int totalPrints = progressMap.count(name) ? progressMap[name].second : 100;
@@ -198,6 +201,9 @@ void WorkerThread(int coreID) {
             if (!readyQueue.empty()) {
                 currentProcess = readyQueue.front();
                 readyQueue.pop();
+				runningScreens[currentProcess.name] = currentProcess.created_at;
+                processCoreMap[currentProcess.name] = coreID;
+                progressMap[currentProcess.name] = { 0, currentProcess.remaining_prints };
             }
             else {
                 this_thread::sleep_for(chrono::milliseconds(100));
@@ -215,8 +221,7 @@ void WorkerThread(int coreID) {
         file << "Process name: " << currentProcess.name << endl;
         file << "Logs:" << endl;
 
-        processCoreMap[currentProcess.name] = coreID;
-        progressMap[currentProcess.name] = { 0, currentProcess.remaining_prints };
+       
 
         for (int i = 0; i < currentProcess.remaining_prints; ++i) {
             time_t now = time(0);
