@@ -47,7 +47,8 @@ void Console::Initialize() {
         return;
     }
 
-    scheduler.startScheduler();
+    /*scheduler.startScheduler();*/
+    // scheduler only starts when scheduler-start is called
     initialized = true;
     cout << "[SYSTEM] Initialization successful.\n";
 }
