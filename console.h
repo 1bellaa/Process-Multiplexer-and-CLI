@@ -8,6 +8,7 @@
 #include <iostream>
 #include <map>
 #include "scheduler.h"
+#include <set>
 
 using namespace std;
 
@@ -15,11 +16,13 @@ string GetCurrentTimestamp();
 void Clear();
 void Welcome();
 
+
+
 class Console {
     bool initialized = false;
     CPUScheduler scheduler;
     map<string, string> screens;
-
+    set<string> activeScreens;
     void DrawScreen(const string& name);
     void ProcessSmi();
     void ScreenSession(const string& name);

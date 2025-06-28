@@ -59,7 +59,7 @@ public:
         case DECLARE: {
             string name;
             int length = 5;
-			// Generate a random variable name
+            // Generate a random variable name
             static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
             for (size_t i = 0; i < length; ++i) {
                 name += charset[rand() % (sizeof(charset) - 1)];
@@ -259,7 +259,7 @@ public:
     }
 
     bool loadConfig() {
-        ifstream file("../config.txt");
+        ifstream file("config.txt"); // ifstream file("../config.txt"); <- this worked for Amor but not for Gio, try to switch between these two if needed
         if (!file.is_open()) {
             cout << "[CONFIG] Config file not found. Using default values." << endl;
             return true; // Still consider it a success with defaults
@@ -294,8 +294,8 @@ public:
 
         // Start worker threads
         string schedulerType = (config.scheduler == "rr") ? "Round Robin" : "FCFS";
-		// For each CPU core, create a thread that will handle process execution
-		// Each thread will run a loop that checks for processes in the queue
+        // For each CPU core, create a thread that will handle process execution
+        // Each thread will run a loop that checks for processes in the queue
         for (int i = 0; i < config.numCpu; ++i) {
             cpuCores.emplace_back([this, schedulerType, i]() {
                 while (isRunning) {
@@ -315,27 +315,27 @@ public:
                         }
                     }
 
-					// If no process is available, sleep for a short time
+                    // If no process is available, sleep for a short time
                     if (!hasWork) {
                         this_thread::sleep_for(chrono::milliseconds(100));
                         continue;
                     }
 
                     if (schedulerType == "Round Robin") {
-						// TODO: Implement Round Robin scheduling logic
-						// I think we should put the round robin logic somewhere else, like in a separate function
-						// STEPS:
-						// Get first process from the queue
-						// Execute the process for the time slice
-						// Check if the process is finished or if time slice is over
-						// If finished, remove it from the queue
-						// If not finished, push it back to the end of the queue
-						// You can use Yuri's code as a reference for this logic, in the FCFS branch
+                        // TODO: Implement Round Robin scheduling logic
+                        // I think we should put the round robin logic somewhere else, like in a separate function
+                        // STEPS:
+                        // Get first process from the queue
+                        // Execute the process for the time slice
+                        // Check if the process is finished or if time slice is over
+                        // If finished, remove it from the queue
+                        // If not finished, push it back to the end of the queue
+                        // You can use Yuri's code as a reference for this logic, in the FCFS branch
                     }
                     else {
-						// TODO: Implement FCFS scheduling logic
-						// FCFS scheduling logic
-						// Execute the process until it finishes (quantum ignored)
+                        // TODO: Implement FCFS scheduling logic
+                        // FCFS scheduling logic
+                        // Execute the process until it finishes (quantum ignored)
                     }
                 }
                 });
@@ -346,17 +346,19 @@ public:
             while (isRunning) {
                 cpuCycles++;
 
-                // Generate a process every tick or every batchProcessFreq ticks
                 if (config.batchProcessFreq <= 1 || cpuCycles % config.batchProcessFreq == 0) {
-                    // Generate a unique process name
                     string pname = "P" + to_string(nextPid);
                     Process newProc(pname, nextPid++);
-                    // Add random instructions
+
                     int numInstructions = config.minIns + rand() % (config.maxIns - config.minIns + 1);
                     for (int i = 0; i < numInstructions; ++i) {
                         InstructionType t = static_cast<InstructionType>(rand() % 6);
                         newProc.addInstruction(Instruction(t));
                     }
+
+                    // Print instruction count for validation
+                    cout << "[SCHEDULER] New process generated: " << pname
+                        << " with " << newProc.instructions.size() << " instructions" << endl;
 
                     {
                         lock_guard<mutex> lock(schedulerMutex);
@@ -370,15 +372,14 @@ public:
                             readyQueue.push(pPtr);
                         }
                     }
-                    cout << "[SCHEDULER] New process generated: " << pname << endl;
                 }
 
-				// Just for showing CPU cycles and active processes: REMOVE before passing
                 if (cpuCycles % 1000 == 0) {
                     lock_guard<mutex> lock(schedulerMutex);
                     cout << "[SCHEDULER] CPU Cycles: " << cpuCycles
                         << ", Active Processes: " << processes.size() << endl;
                 }
+
                 this_thread::sleep_for(chrono::milliseconds(10));
             }
             });
@@ -428,6 +429,7 @@ public:
     uint64_t getCpuCycles() const {
         return cpuCycles;
     }
+    const vector<Process>& getAllProcesses() const { return processes; } // Added for screen-ls
 
 private:
     vector<Process> processes;

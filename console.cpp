@@ -1,5 +1,6 @@
 #include "console.h"
 #include <ctime>
+#include <fstream>
 
 using namespace std;
 
@@ -20,17 +21,25 @@ void Console::ProcessSmi() {
 }
 
 void Console::ScreenSession(const string& name) {
+    activeScreens.insert(name);  // Mark as active
     DrawScreen(name);
     string input;
+
     while (true) {
         cout << "Enter command: ";
         getline(cin, input);
+
         if (input == "process-smi") ProcessSmi();
         else if (input == "clear") DrawScreen(name);
-        else if (input == "exit") { Clear(); return; }
+        else if (input == "exit") {
+            activeScreens.erase(name); // Mark as inactive
+            Clear();
+            return;
+        }
         else cout << "Unknown command. Try again." << endl;
     }
 }
+
 
 bool Console::ScreenExists(const string& name) {
     return screens.find(name) != screens.end();
@@ -82,9 +91,17 @@ void Console::ListScreens() {
     }
 
     cout << "Existing Screens:" << endl;
-    if (screens.empty()) cout << "  [none yet]" << endl;
-    else for (auto& [name, ts] : screens) cout << "  " << name << " (Created: " << ts << ")" << endl;
+    if (screens.empty()) {
+        cout << "  [none yet]" << endl;
+    }
+    else {
+        for (auto& [name, ts] : screens) {
+            string status = activeScreens.count(name) ? "Active" : "Inactive";
+            cout << "  " << name << " (Created: " << ts << ", Status: " << status << ")" << endl;
+        }
+    }
 }
+
 
 void Console::ResumeScreen(const string& name) {
     if (!initialized) {
@@ -124,9 +141,29 @@ void Console::ReportUtil() {
         return;
     }
 
-    cout << "[REPORT] Current CPU Cycles: " << scheduler.getCpuCycles() << endl;
-    cout << "[REPORT] Scheduler Algorithm: " <<
-        (scheduler.config.scheduler == "rr" ? "Round Robin" : scheduler.config.scheduler) << endl;
-    cout << "[REPORT] Number of CPUs: " << scheduler.config.numCpu << endl;
-    cout << "[REPORT] Quantum Cycles: " << scheduler.config.quantumCycles << endl;
+    ofstream file("csopesy-log.txt");
+    if (!file.is_open()) {
+        cout << "[ERROR] Could not open csopesy-log.txt for writing.\n";
+        return;
+    }
+
+    file << "[REPORT] CPU Cycles: " << scheduler.getCpuCycles() << "\n";
+    file << "[REPORT] Scheduler: " << (scheduler.config.scheduler == "rr" ? "Round Robin" : "FCFS") << "\n";
+    file << "[REPORT] Number of CPUs: " << scheduler.config.numCpu << "\n";
+    file << "[REPORT] Quantum Cycles: " << scheduler.config.quantumCycles << "\n";
+    file << "--------------------------------------\n";
+
+    const vector<Process>& all = scheduler.getAllProcesses();
+    for (const Process& p : all) {
+        file << "PID: " << p.pid << "\n";
+        file << "Name: " << p.name << "\n";
+        file << "Created At: " << p.createdAt << "\n";
+        file << "Finished: " << (p.isFinished ? "Yes" : "No") << "\n";
+        file << "Instruction Progress: "
+            << p.currentInstruction << " / " << p.instructions.size() << "\n";
+        file << "--------------------------------------\n";
+    }
+
+    file.close();
+    cout << "[REPORT] csopesy-log.txt created.\n";
 }
