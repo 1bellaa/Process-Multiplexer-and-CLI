@@ -1,146 +1,82 @@
+/**
+ * @file emulator.cpp
+ * @brief This file contains the main entry point for the CSOPESY Emulator.
+ * It initializes the console, handles user commands, and manages the emulator's functionality.
+ */
+
 #include <iostream>
+#include <string>
+#include <ctime>
+#include <windows.h>
+#include "console.h"
+#include "marquee.h"
+
+
+#pragma once
+
+void StartMarqueeConsole();
 using namespace std;
 
-void Clear() {
-    system("cls");
+extern void StartMarqueeConsole();
+
+string GetCurrentTimestamp() {
+    time_t now = time(0);
+    tm ltm;
+    localtime_s(&ltm, &now);
+    char buffer[50];
+    strftime(buffer, sizeof(buffer), "%m/%d/%Y, %I:%M:%S %p", &ltm);
+    return string(buffer);
 }
 
 void Welcome() {
-    cout << "Welcome to CSOPESY Emulator!" << endl  
-         << "This is for CSOPESY Seatwork #1" << endl;
+    cout << " ____  ____  _____  _____  ____  ____  __  __" << endl;
+    cout << "| ...|/ ...|| ... || ... || ...|/ ...||  ||  |" << endl;
+    cout << "| |   | |__ | | | || |.| || |.. | |__ |  \\/  |" << endl;
+    cout << "| |   \\._  || | | ||  __/ | ...| \\._ | \\.  ./" << endl;
+    cout << "| |__. __| || |.| || |    | |... __| |  |  |" << endl;
+    cout << "|____||____||_____||_|    |____||____|  |__|" << endl;
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(handle, 2); // Green
+    cout << "Welcome to CSOPESY Emulator!" << endl;
+    cout << "This is for CSOPESY Mockup MO" << endl;
+    SetConsoleTextAttribute(handle, 14); // Yellow
+    cout << "Type 'exit' to quit, 'clear' to clear the screen" << endl;
+    SetConsoleTextAttribute(handle, 15); // White
 }
 
-void ListProcesses() {
-    cout << "screen -ls command recognized. Doing something." << endl;
-}
-
-void ProcessSmi() {
-    cout << "process-smi command recognized. Doing something." << endl;
-}
-
-void AddProcess() {
-    cout << "screen -s command recognized. Doing something." << endl;
-    
-    bool add_run = true;
-    while(add_run) {
-        string command;
-        cout << "Enter command: ";
-        getline(cin, command);
-
-        if (command == "process-smi") {
-            ProcessSmi();
-        } else if (command == "clear") {
-            Clear();
-        } else if (command == "exit") {
-            add_run = false;
-            Clear();
-            return;
-        } else {
-            cout << "Unknown command. Please try again." << endl;
-        }
-    }
-}
-
-void UpdateProcess() {
-    cout << "screen -r command recognized. Doing something." << endl;
-    
-    bool update_run = true;
-    while(update_run) {
-        string command;
-        cout << "Enter command: ";
-        getline(cin, command);
-
-        if (command == "process-smi") {
-            ProcessSmi();
-        } else if (command == "clear") {
-            Clear();
-        } else if (command == "exit") {
-            update_run = false;
-            Clear();
-            return;
-        } else {
-            cout << "Unknown command. Please try again." << endl;
-        }
-    }
-}
-
-void Initialize() {
-    cout << "initialize command recognized. Doing something." << endl;
-}
-
-void SchedulerStart() {
-    cout << "scheduler-start command recognized. Doing something." << endl;
-}
-
-void SchedulerStop() {
-    cout << "scheduler-stop command recognized. Doing something." << endl;
-}
-
-void ReportUtil() {
-    cout << "report-util command recognized. Doing something." << endl;
-}
-
-void Screen() {
-    /* Screen commands */
-    cout << "screen command recognized." << endl;
-    
-    bool screen_run = true;
-    while(screen_run) {
-        string command;
-        cout << "Enter command: ";
-        getline(cin, command);
-
-        if (command == "screen -ls") {
-            ListProcesses();
-        } else if (command == "screen -s") {
-            AddProcess();
-        } else if (command == "screen -r") {
-            UpdateProcess();
-        } else if (command == "process-smi") {
-            ProcessSmi();
-        } else if (command == "clear") {
-            Clear();
-        } else if (command == "exit") {
-            screen_run = false;
-            Clear();
-            Welcome();
-            return;
-        } else {
-            cout << "Unknown command. Please try again." << endl;
-        }
-    }
+void Clear() {
+    system("cls");
+    Welcome();
 }
 
 int main() {
-    /* Welcome message for CSOPESY Emulator main menu console */ 
+    srand(static_cast<unsigned int>(time(nullptr)));
     Welcome();
-    
-    /* Loop for running the program */
+    Console console;
     bool running = true;
-    while(running) {
+    while (running) {
         string command;
         cout << "Enter command: ";
-        cin >> command;
-        cin.ignore(); // Clear the input buffer to avoid issues with getline (forgot the problem i encountered kaya ganito s'ya naka-implement)
-
-        if (command == "initialize") {
-            Initialize();
-        } else if (command == "screen") {
-            Screen();
-        } else if (command == "scheduler-start") {
-            SchedulerStart();
-        } else if (command == "scheduler-stop") {
-            SchedulerStop();
-        } else if (command == "report-util") {
-            ReportUtil();
-        } else if (command == "clear") {
-            Clear();
-        } else if (command == "exit") {
-            running = false;
-        } else {
-            cout << "Unknown command. Please try again." << endl;
+        getline(cin, command);
+        if (command == "initialize") console.Initialize();
+        else if (!console.IsInitialized() && command != "exit") {
+            cout << "Please initialize the system first using 'initialize' command." << endl;
+            // add a part where the config file will be loaded?? or smth here emememe
+            // ^reply to above: config file is read in Console class's initialize, with the Scheduler class's loadConfig method
         }
+        else if (command == "screen -ls") console.ListScreens();
+        else if (command.rfind("screen -s ", 0) == 0) console.CreateScreen(command.substr(10));
+        else if (command.rfind("screen -r ", 0) == 0) console.ResumeScreen(command.substr(10));
+        else if (command == "scheduler-start") console.SchedulerStart();
+        else if (command == "scheduler-stop") console.SchedulerStop();
+        else if (command == "report-util") console.ReportUtil();
+        else if (command == "marquee") {
+            StartMarqueeConsole();
+            Welcome(); // Show welcome screen again after exiting marquee
+        }
+        else if (command == "clear") Clear();
+        else if (command == "exit") running = false;
+        else cout << "Unknown command. Please try again." << endl;
     }
-
     return 0;
 }
