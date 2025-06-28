@@ -294,48 +294,51 @@ public:
 
         // Start worker threads
         string schedulerType = (config.scheduler == "rr") ? "Round Robin" : "FCFS";
-        // For each CPU core, create a thread that will handle process execution
-        // Each thread will run a loop that checks for processes in the queue
+        cout << "[SCHEDULER] Starting " << schedulerType << " scheduler with "
+            << config.numCpu << " CPU cores" << endl;
+
         for (int i = 0; i < config.numCpu; ++i) {
             cpuCores.emplace_back([this, schedulerType, i]() {
                 while (isRunning) {
                     Process* currentProcess = nullptr;
                     bool hasWork = false;
+
+                    // Lock the queue to get a process
                     {
                         lock_guard<mutex> lock(queueMutex);
-                        if (schedulerType == "Round Robin" && !rrQueue.empty()) {
-                            currentProcess = rrQueue.front();
-                            rrQueue.pop_front();
-                            hasWork = true;
-                        }
-                        else if (schedulerType == "FCFS" && !readyQueue.empty()) {
+                        if (!readyQueue.empty()) {
                             currentProcess = readyQueue.front();
                             readyQueue.pop();
                             hasWork = true;
                         }
                     }
 
-                    // If no process is available, sleep for a short time
                     if (!hasWork) {
                         this_thread::sleep_for(chrono::milliseconds(100));
                         continue;
                     }
 
-                    if (schedulerType == "Round Robin") {
-                        // TODO: Implement Round Robin scheduling logic
-                        // I think we should put the round robin logic somewhere else, like in a separate function
-                        // STEPS:
-                        // Get first process from the queue
-                        // Execute the process for the time slice
-                        // Check if the process is finished or if time slice is over
-                        // If finished, remove it from the queue
-                        // If not finished, push it back to the end of the queue
-                        // You can use Yuri's code as a reference for this logic, in the FCFS branch
+                    if (schedulerType == "FCFS") {
+                        // FCFS
+                        cout << "[CPU " << i << "] Executing process: "
+                            << currentProcess->name << endl;
+
+                        while (!currentProcess->isFinished) {
+                            bool finished = currentProcess->executeNextInstruction(config.delaysPerExec);
+
+                            // Check if process finished
+                            if (finished) {
+                                lock_guard<mutex> lock(schedulerMutex);
+                                cout << "[CPU " << i << "] Process "
+                                    << currentProcess->name << " finished execution" << endl;
+                                break;
+                            }
+
+                            this_thread::sleep_for(chrono::milliseconds(1));
+                        }
                     }
-                    else {
-                        // TODO: Implement FCFS scheduling logic
-                        // FCFS scheduling logic
-                        // Execute the process until it finishes (quantum ignored)
+                    else if (schedulerType == "Round Robin") {
+                        // Round Robin
                     }
                 }
                 });
